@@ -1,0 +1,42 @@
+body {
+    background-color: black;
+    color: white;
+}
+
+.authmenu {
+    padding: 5%;
+    border-radius: 5%;
+    border-color: black;
+    border-style: solid;
+    justify-content: center;
+    text-align: center;
+}
+
+.topbanner {
+    text-align: center;
+}
+
+input {
+    padding: .5%;
+    background-color: rgb(214, 214, 214);
+}
+
+button {
+    padding: .5%
+}
+
+.logoutbutton {
+    margin-top: 10px;
+}
+
+.messagesbox {
+    padding: 5px;
+    border-radius: 2%;
+    border-width: 2px;
+    border-color: white;
+    border-style: solid;
+}
+
+.messagetextfield {
+    width: 50%;
+}

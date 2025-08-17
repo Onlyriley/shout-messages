@@ -4,16 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shout Messages</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
-        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="./styles.css"/>
 </head>
 
 <body>
-    <section id="auth">
+    <section class="topbanner">
+        <h2>Shout Messages</h2>
+    </section>
+
+    <section id="auth" class="authmenu">
         <div>
             <h2>Login</h2>
-            <p>Create an account!</p>
         </div>
 
         <p id="error" style="display: none;"></p>
@@ -21,7 +22,6 @@
         <input id="passwordInput" placeholder="********" />
         <button id="authBtn" onclick="authenticate()">Submit</button>
 
-        <hr />
         <div class="register-content">
             <p>No Account?</p>
             <button onclick="toggleIsRegister()" id="registerBtn">Sign up</button>
@@ -113,7 +113,7 @@
         // Show messages in the order they arrive (oldest first)
         // If messages are currently newest first, reverse them
         if (messages.length > 1 && messages[0].id > messages[messages.length-1].id) {
-            messageList = ``
+            messageList = `<div class="messagesbox">`
             messages.slice().reverse().forEach((message) => {
                 messageList += `
                 <div>
@@ -124,8 +124,10 @@
         }
         messageList += `
         <div>
-            <input id="messageInput" placeholder="Write a message" />
+            <input size="75" id="messageInput" placeholder="Write a message" />
             <button onclick="addMessage()"><i>Add</i></button>
+        </div>
+        <button class="logoutbutton" onclick="logout()">Logout</button>
         </div>
         `
 
@@ -140,6 +142,11 @@
             })
             messageInput.focus()
         }
+    }
+
+    function logout() {
+        localStorage.removeItem("token")
+        window.location.reload()
     }
 
     async function authenticate() {
@@ -192,7 +199,7 @@
                 // show dashboard
                 showDashboard()
             } else {
-                throw Error('❌ Failed to authenticate...')
+                throw Error('Failed to authenticate...')
             }
 
         } catch (err) {
