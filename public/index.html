@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shout Messages</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+    <section id="auth">
+        <div>
+            <h2>Login</h2>
+            <p>Create an account!</p>
+        </div>
+
+        <p id="error" style="display: none;"></p>
+        <input id="emailInput" placeholder="Email" />
+        <input id="passwordInput" placeholder="********" />
+        <button id="authBtn" onclick="authenticate()">Submit</button>
+
+        <hr />
+        <div class="register-content">
+            <p>No Account?</p>
+            <button onclick="toggleIsRegister()" id="registerBtn">Sign up</button>
+        </div>
+    </section>
+
+    <header style="display: none;">
+        <div id="error" style="display:none; color:red;"></div>
+        <h1>Here are the messages</h1>
+    </header>
+
+    <main style="display: none;">
+
+    </main>
+
+</body>
+<script>
+    let token = localStorage.getItem('token')
+    let isLoading = false
+    let isAuthenticating = false
+    let isRegistration = false
+    let messages = []
+
+    const apiBase = '/'
+
+    // Elements
+    const main = document.querySelector('main')
+    const authContent = document.getElementById('auth')
+    const email = document.getElementById('emailInput')
+    const password = document.getElementById('passwordInput')
+    const registerBtn = document.getElementById('registerBtn')
+    const authBtn = document.getElementById('authBtn')
+    const addMessageBtn = document.getElementById('addMessageBtn')
+    const textError = document.getElementById('error')
+
+    async function toggleIsRegister() {
+        isRegistration = !isRegistration
+        registerBtn.innerText = isRegistration ? 'Sign in' : 'Sign up'
+        document.querySelector('#auth > div h2').innerText = isRegistration ? 'Sign Up' : 'Login'
+        document.querySelector('.register-content p').innerText = isRegistration ? 'Already have an account?' : 'Don\'t have an account?'
+        document.querySelector('.register-content button').innerText = isRegistration ? 'Sign in' : 'Sign up'
+    }
+
+    async function showDashboard() {
+        main.style.display = 'block'
+        authContent.style.display = 'none'
+
+        await fetchMessages()
+    }
+
+    async function fetchMessages() {
+        isLoading = true
+        const response = await fetch(apiBase + 'messages', {
+            headers: { 'Authorization': token}
+        })
+        const messagesData = await response.json()
+        messages = messagesData
+        isLoading = false
+        renderMessages()
+    }
+
+    async function addMessage() {
+        const messageInput = document.getElementById('messageInput')
+        const content = messageInput.value
+
+        if (!content) {return}
+
+        await fetch(apiBase + 'messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token
+            },
+            body: JSON.stringify({content})
+        })
+        messageInput.value = ''
+        fetchMessages()
+    }
+
+    function renderMessages() {
+        let messageList = ``
+        messages.forEach((message) => {
+            messageList += `
+            <div>
+                <p>${message.username}: ${message.content}</p>    
+            </div>
+            `
+        })
+        // Show messages in the order they arrive (oldest first)
+        // If messages are currently newest first, reverse them
+        if (messages.length > 1 && messages[0].id > messages[messages.length-1].id) {
+            messageList = ``
+            messages.slice().reverse().forEach((message) => {
+                messageList += `
+                <div>
+                    <p>${message.username}: ${message.content}</p>    
+                </div>
+                `
+            })
+        }
+        messageList += `
+        <div>
+            <input id="messageInput" placeholder="Write a message" />
+            <button onclick="addMessage()"><i>Add</i></button>
+        </div>
+        `
+
+        main.innerHTML = messageList
+        // Add event listener for Enter key
+        const messageInput = document.getElementById('messageInput')
+        if (messageInput) {
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    addMessage()
+                }
+            })
+            messageInput.focus()
+        }
+    }
+
+    async function authenticate() {
+        // access email and pass values
+        const emailVal = email.value
+        const passVal = password.value
+
+        // guard clauses... if authenticating, return
+        if (
+            isLoading ||
+            isAuthenticating ||
+            !emailVal ||
+            !passVal
+        ) { return }
+
+        // reset error and set isAuthenticating to true
+        isAuthenticating = true
+        authBtn.innerText = 'Authenticating...'
+
+        try {
+            let data
+            if (isRegistration) {
+                // register an account
+                const response = await fetch(apiBase + 'auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: emailVal, password: passVal })
+                })
+                data = await response.json()
+            } else {
+                // login an account
+                const response = await fetch(apiBase + 'auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: emailVal, password: passVal })
+                })
+                data = await response.json()
+            }
+
+            if (data.token) {
+                token = data.token
+                localStorage.setItem('token', token)
+
+                // authenicating into loading
+                authBtn.innerText = 'Loading...'
+
+                // fetch todos
+                await fetchMessages()
+
+                // show dashboard
+                showDashboard()
+            } else {
+                throw Error('❌ Failed to authenticate...')
+            }
+
+        } catch (err) {
+            console.log(err.message)
+            error.innerText = err.message
+            error.style.display = 'block'
+        } finally {
+            authBtn.innerText = 'Submit'
+            isAuthenticating = false
+        }
+
+
+    }
+
+    if (token) {
+        async function run() {
+            await fetchMessages()
+            showDashboard()
+        }
+        run()
+    }
+
+
+</script>
+</html>
