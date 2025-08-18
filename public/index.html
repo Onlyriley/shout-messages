@@ -8,35 +8,37 @@
 </head>
 
 <body>
-    <section class="topbanner">
-        <h2>Shout Messages</h2>
-    </section>
+    <div class="background-gradient">
+        <section class="topbanner">
+            <h2>Shout Messages</h2>
+        </section>
 
-    <section id="auth" class="authmenu">
-        <div>
-            <h2>Login</h2>
+        <div class="container">
+            <section id="auth" class="authmenu card">
+                <h2>Login</h2>
+                <p id="error" style="display: none;"></p>
+                <input id="emailInput" placeholder="Email" />
+                <input id="passwordInput" placeholder="********" type="password" />
+                <button id="authBtn" onclick="authenticate()">Submit</button>
+                <div class="register-content">
+                    <p>No Account?</p>
+                    <button onclick="toggleIsRegister()" id="registerBtn">Sign up</button>
+                </div>
+            </section>
+
+            <header style="display: none;">
+                <div id="error" style="display:none; color:red;"></div>
+                <h1>Here are the messages</h1>
+            </header>
+
+            <main style="display: none;">
+                <!-- Messages will go here -->
+            </main>
         </div>
-
-        <p id="error" style="display: none;"></p>
-        <input id="emailInput" placeholder="Email" />
-        <input id="passwordInput" placeholder="********" />
-        <button id="authBtn" onclick="authenticate()">Submit</button>
-
-        <div class="register-content">
-            <p>No Account?</p>
-            <button onclick="toggleIsRegister()" id="registerBtn">Sign up</button>
-        </div>
-    </section>
-
-    <header style="display: none;">
-        <div id="error" style="display:none; color:red;"></div>
-        <h1>Here are the messages</h1>
-    </header>
-
-    <main style="display: none;">
-
-    </main>
-
+        <footer>
+            <p>&copy; 2025 Shout App</p>
+        </footer>
+    </div>
 </body>
 <script>
     let token = localStorage.getItem('token')
@@ -65,11 +67,16 @@
         document.querySelector('.register-content button').innerText = isRegistration ? 'Sign in' : 'Sign up'
     }
 
+    let messageRefreshInterval = null;
     async function showDashboard() {
         main.style.display = 'block'
         authContent.style.display = 'none'
 
         await fetchMessages()
+        // Start auto-refresh every 10 seconds
+        if (!messageRefreshInterval) {
+            messageRefreshInterval = setInterval(fetchMessages, 10000);
+        }
     }
 
     async function fetchMessages() {
@@ -146,6 +153,10 @@
 
     function logout() {
         localStorage.removeItem("token")
+        if (messageRefreshInterval) {
+            clearInterval(messageRefreshInterval);
+            messageRefreshInterval = null;
+        }
         window.location.reload()
     }
 
